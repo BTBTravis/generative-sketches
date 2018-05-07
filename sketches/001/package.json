@@ -1,0 +1,20 @@
+{
+  "name": "001",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "watchify src/sketch_001.js -t babelify -o dist/sketch_bundle_001.js",
+    "build": "browserify src/sketch_001.js -t babelify -o dist/sketch_bundle_001.js"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.6.1",
+    "babelify": "^8.0.0",
+    "browserify": "^16.2.0",
+    "watchify": "^3.11.0"
+  },
+  "dependencies": {
+    "paper": "^0.11.5"
+  }
+}
