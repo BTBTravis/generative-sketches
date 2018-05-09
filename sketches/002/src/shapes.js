@@ -8,8 +8,6 @@ export default (services) => {
   function IsoCube (x, y, size, color) {
     // def colors
     let colorHsl = services.cconvert.hex.hsl(color);
-    console.log('color: ', color);
-    console.log('colorHsl: ', colorHsl);
     let topColor = '#' + services.cconvert.hsl.hex(colorHsl[0], colorHsl[1], colorHsl[2] != 100 ? colorHsl[2] + 5 : 100);
     let rightColor = color;
     let leftColor = '#' + services.cconvert.hsl.hex(colorHsl[0], colorHsl[1], colorHsl[2] != 0 ? colorHsl[2] - 5 : 0);
@@ -69,7 +67,7 @@ export default (services) => {
     };
     let ogTopPts = {};
     for (var key in ogBotPts) { // create the top ring of pts by moving the botpts up the page via subtracting from their y vals
-      ogTopPts[key + 'p'] = new Point(ogBotPts[key].x, ogBotPts[key].y - 5.33);
+      ogTopPts[key + 'p'] = new Point(ogBotPts[key].x, ogBotPts[key].y - 5.18);
     }
     let ogPts = Object.assign({}, ogBotPts, ogTopPts);
     let pts = {};
@@ -103,46 +101,26 @@ export default (services) => {
         drawLine([pts.dp, pts.ap, pts.bp]),
       ]);
 
-      let rightSideSupports = [];
-      //let rightSideSupports = [support, support2, support3, support4];
-      if (cubeCount > 0) {
-        var support = drawLine([
-          new Point(pts.b.x - (.15 * size), pts.b.y - ((1.145 + .15) * size)),
-          new Point(pts.b.x, pts.b.y - ((.15 + 1.145) * size)),
-          new Point(pts.b.x - (.15 * size), pts.b.y - ((1.145) * size))
-        ]);
-        rightSideSupports.push(support);
+      //let rightSideSupports = [];
+      var supportPts = [
+        [pts.b, new Point(pts.b.x - (.15 * size), pts.b.y - (.15 * size))],
+        [pts.d, new Point(pts.d.x + (.15 * size), pts.d.y - (.15 * size))],
+        [new Point(pts.b.x, pts.b.y - ((.15 + 1.145) * size)), new Point(pts.b.x - (.15 * size), pts.b.y - ((.075 + 1.145) * size))],
+        [new Point(pts.d.x, pts.d.y - ((.15 + 1.145) * size)), new Point(pts.d.x + (.15 * size), pts.d.y - ((.075 + 1.145) * size))]
+      ];
+      let supportLines = [];
+      for (var i = 0; i < cubeCount; i++) {
+        let thisPts = supportPts.map(x => {
+          return x.map(y => {
+            let y2 = y.clone();
+            y2.y = y2.y - (i * (1.145 + .15) * size);
+            return y2;
+          });
+        });
+        let lines = thisPts.map(x => drawLine(x));
+        lines.map(line => supportLines.push(line));
       }
-      if (cubeCount > 1) {
-        var support2 = support.clone();
-        support2.translate(new Point(0, (1.145 + .15) * size * -1));
-        rightSideSupports.push(support2);
-      }
-      if (cubeCount > 2) {
-        var support3 = support2.clone();
-        support2.translate(new Point(0, (1.145 + .15) * size * -1));
-        rightSideSupports.push(support3);
-      }
-      if (cubeCount > 3) {
-        var support4 = drawLine([
-          pts.bp,
-          new Point(pts.b.x - (.15 * size), pts.bp.y + (.3 * size))
-        ]);
-        rightSideSupports.push(support4);
-      }
-
-      let leftSideSupports = rightSideSupports.map(x => {
-        let y = x.clone();
-        y.scale(-1, 1);
-        y.translate(new Point(-2.15 * size, 0));
-        return y;
-      });
-
-      if (rightSideSupports.length > 0) {
-        cageFront.addChildren(rightSideSupports);
-        cageFront.addChildren(leftSideSupports);
-      }
-
+      cageFront.addChildren(supportLines);
       cageFront.translate(new Point(x, y));
       return cageFront;
     }

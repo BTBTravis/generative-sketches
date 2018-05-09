@@ -22,11 +22,12 @@ window.onload = function() {
     1: '#A1F600',
     2: '#8C02D2',
     3: '#FFFFFF',
-    bg: '#69029D'
+    bg0: '#69029D',
+    bg1: '#c5a402',
+    bg2: '#FFFFFF',
+    bg3: '#7abc01'
   };
 
-  let bg = new Path.Rectangle(0, 0, canvas.width, canvas.height);
-  bg.fillColor = colors.bg;
 
   function isoCell (x, y, size, data) {
     let cage = new shapes.IsoCage(x, y, size, 'white', data.length);
@@ -47,7 +48,6 @@ window.onload = function() {
         default:
           var yOffset = y - (.15 * size);
       }
-      console.log('data: ', data);
       cubes.push(new shapes.IsoCube(x, yOffset, size, colors[data[i]]));
     }
     //cubes.reverse();
@@ -55,29 +55,51 @@ window.onload = function() {
     cage.drawFg();
   }
 
-  let w = canvas.width;
-  let h = canvas.height;
-  let s = 50;
-  for (var i = 10; i > 0; i--) {
-    let data = [];
-    data = randomAdd(data);
-    data = randomAdd(data);
-    data = randomAdd(data);
-    data = randomAdd(data);
-    console.log('data: ', data);
-    isoCell(w - (1.45 * i * s), h - ((.663 + .15) * s * i), s, data);
+  function draw() {
+    let bg = new Path.Rectangle(0, 0, canvas.width, canvas.height);
+    let bgRandomVal = Math.floor(Math.random() * Math.floor(5));
+    bg.fillColor = colors['bg' + bgRandomVal];
+
+    let w = canvas.width;
+    let h = canvas.height;
+    let s = 50;
+    for (var i = 10; i > -2; i--) {
+      let ax = w - (1.45 * i * s);
+      let ay = h - ((.663 + .15) * s * i);
+      //if (i % 3 == 0) {
+        //isoCell(ax + (1.45 * s), ay - (.663 + .15) * s, s, randomData());
+        //isoCell(ax, ay, s, randomData());
+        //isoCell(ax - (1.45 * s), ay + (.663 + .15) * s, s, randomData());
+      //}
+      isoCell(ax, ay, s, randomData());
+    }
+    function randomData () {
+      let data = [];
+      data = randomAdd(data);
+      data = randomAdd(data);
+      data = randomAdd(data);
+      data = randomAdd(data);
+      return data;
+    }
+    function randomAdd (arr) {
+      let val = Math.floor(Math.random() * Math.floor(6));
+      if(val < 4) arr.push(val);
+      return arr;
+    }
   }
-  function randomAdd (arr) {
-    let val = Math.floor(Math.random() * Math.floor(5));
-    if(val !== 4) arr.push(val);
-    return arr;
-  }
-  //isoCell(w - (1.45 * s), h - ((.663 + .15) * s), s, [2, 2, 2, 0]);
-  //isoCell(w, h, 50, [1, 1, 0, 1]);
-  //isoCell(w / 2, h / 2 + 200, 60, [2, 3, 0, 1]);
 
 
-  //gen.next();
+  paper.view.onFrame = (e) => {
+    if(e.count % 60  === 0) {
+      project.clear();
+      draw();
+      //isoBlocks.forEach(block => {
+        //block.updateHeight();
+        //block.draw();
+      //});
+    }
+  };
+
   // Draw the view now:
   paper.view.draw();
 }
