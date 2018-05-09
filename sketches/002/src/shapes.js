@@ -8,6 +8,8 @@ export default (services) => {
   function IsoCube (x, y, size, color) {
     // def colors
     let colorHsl = services.cconvert.hex.hsl(color);
+    console.log('color: ', color);
+    console.log('colorHsl: ', colorHsl);
     let topColor = '#' + services.cconvert.hsl.hex(colorHsl[0], colorHsl[1], colorHsl[2] != 100 ? colorHsl[2] + 5 : 100);
     let rightColor = color;
     let leftColor = '#' + services.cconvert.hsl.hex(colorHsl[0], colorHsl[1], colorHsl[2] != 0 ? colorHsl[2] - 5 : 0);
@@ -27,7 +29,6 @@ export default (services) => {
       return pt;
     };
 
-    console.log('topPts: ', topPts);
 
     // draw IsoCube to screen
     this.draw = function () {
@@ -58,7 +59,7 @@ export default (services) => {
    * prama{color} hex color
    */
 
-  function IsoCage (x, y, size, color) {
+  function IsoCage (x, y, size, color, cubeCount) {
     // def points
     let ogBotPts = {
       a: new Point(0, 0),
@@ -85,30 +86,76 @@ export default (services) => {
     };
 
     // draw IsoCage to screen
-    this.drawer = function* () {
+    this.drawBg = () => {
       let cageBack = new Group([
         drawLine([pts.b, pts.c, pts.d]),
         drawLine([pts.bp, pts.cp, pts.dp]),
         drawLine([pts.c, pts.cp])
       ]);
       cageBack.translate(new Point(x, y));
-      yield cageBack;
+      return cageBack;
+    };
+
+    this.drawFg = () => {
       let cageFront = new Group([
         drawLine([pts.a, pts.b, pts.bp, pts.cp, pts.dp, pts.d, pts.a]),
         drawLine([pts.a, pts.ap]),
-        drawLine([pts.dp, pts.ap, pts.bp])
+        drawLine([pts.dp, pts.ap, pts.bp]),
       ]);
+
+      let rightSideSupports = [];
+      //let rightSideSupports = [support, support2, support3, support4];
+      if (cubeCount > 0) {
+        var support = drawLine([
+          new Point(pts.b.x - (.15 * size), pts.b.y - ((1.145 + .15) * size)),
+          new Point(pts.b.x, pts.b.y - ((.15 + 1.145) * size)),
+          new Point(pts.b.x - (.15 * size), pts.b.y - ((1.145) * size))
+        ]);
+        rightSideSupports.push(support);
+      }
+      if (cubeCount > 1) {
+        var support2 = support.clone();
+        support2.translate(new Point(0, (1.145 + .15) * size * -1));
+        rightSideSupports.push(support2);
+      }
+      if (cubeCount > 2) {
+        var support3 = support2.clone();
+        support2.translate(new Point(0, (1.145 + .15) * size * -1));
+        rightSideSupports.push(support3);
+      }
+      if (cubeCount > 3) {
+        var support4 = drawLine([
+          pts.bp,
+          new Point(pts.b.x - (.15 * size), pts.bp.y + (.3 * size))
+        ]);
+        rightSideSupports.push(support4);
+      }
+
+      let leftSideSupports = rightSideSupports.map(x => {
+        let y = x.clone();
+        y.scale(-1, 1);
+        y.translate(new Point(-2.15 * size, 0));
+        return y;
+      });
+
+      if (rightSideSupports.length > 0) {
+        cageFront.addChildren(rightSideSupports);
+        cageFront.addChildren(leftSideSupports);
+      }
+
       cageFront.translate(new Point(x, y));
-      yield cageFront;
+      return cageFront;
     }
 
     function drawLine (pts) {
       let path = new Path();
       path.strokeColor = color;
       path.strokeWidth = 2;
+      path.strokeCap = 'round';
       pts.forEach(pt => path.add(pt));
       return path;
     }
+
   }
 
   return {
