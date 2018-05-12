@@ -2,8 +2,11 @@
 import paper from 'paper'; // to be globally declared
 import cconvert from 'color-convert';
 import "babel-polyfill";
-//import createShapes from './shapes';
+import seedrandom from 'seedrandom';
+//seedrandom('seed3', { global: true }); // override Math.Random
+seedrandom('seed' + Math.random(), { global: true }); // override Math.Random
 
+//import createShapes from './shapes';
 //const shapes = createShapes({
   //cconvert: cconvert
 //});
@@ -34,22 +37,16 @@ for (var key in colors) {
   }
 }
 
+
 window.onload = function() {
   paper.setup(canvas);
-
-
-
   console.log('colors: ', colors);
-
-  //let ogPt = new Point(0, canvas.height);
-  //let ogPt = new Point(canvas.width / 2, canvas.height / 2);
   let ogPt = new Point(0, canvas.height / 2);
 
   let a = new Point(0, 0);
   let b = new Point(1, -0.577);
   let c = new Point(0, -1.14);
   let d = new Point(-1, -0.577);
-
 
   let basePath = new Path([a, b, c, d, a]);
   //basePath.strokeWeight = 2;
@@ -167,3 +164,36 @@ function isoPlatform (rec, color) {
   return new Group([platfromTop, platfromRight, platfromLeft]);
 }
 
+/*
+ * random return an option from objects provided
+ * prama{Array[Obj]}
+ *
+ */
+function randomSelect (options) {
+  let totalChance = options.reduce((total, option) => {
+    total += option.chance;
+    return total;
+  }, 0);
+  if(totalChance !== 1) throw 'randomSelect chances dont add up to 1';
+  let r  = Math.random();
+  let ranges = options.reduce((carry, option) => {
+    carry.ranges.push({
+      min: carry.total,
+      max: option.chance + carry.total
+    });
+    carry.total += option.chance;
+    return carry;
+  }, {total: 0, ranges: []});
+  let selected = ranges.ranges.reduce((sel, range, i) => {
+    if(sel === false && range.min < r && range.max > r) return options[i];
+    return sel;
+  }, false);
+  return selected.val;
+}
+
+let val = randomSelect([
+  {val: '49%', chance: .49},
+  {val: '25%', chance: .25},
+  {val: '26%', chance: .26}
+]);
+console.log('val: ', val);
