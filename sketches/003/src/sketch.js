@@ -3,7 +3,8 @@ import paper from 'paper'; // to be globally declared
 import cconvert from 'color-convert';
 import "babel-polyfill";
 import seedrandom from 'seedrandom';
-let seed = 'seed_' + Math.round(Math.random() * 10000000);
+//let seed = 'seed_' + Math.round(Math.random() * 10000000);
+let seed = 'seed_2525747';
 console.log(seed);
 seedrandom(seed, { global: true }); // override Math.Random
 
@@ -74,9 +75,9 @@ window.onload = function() {
     let color = colors[Math.floor(Math.random() * Math.floor(3))];
 
     let type = randomSelect([
-      {val: 'none', chance: .60},
+      {val: 'none', chance: .70},
       {val: 'hole', chance: .10},
-      {val: 'spill', chance: .30}
+      {val: 'spill', chance: .20}
     ]);
     let platfrom = isoPlatform (rec, color);
     if(type === 'hole') return new Group(platfrom, isoHole(platfrom, color));
@@ -91,8 +92,6 @@ window.onload = function() {
       //fontSize: 12
     //});
   //});
-
-
 
   paper.view.onFrame = (e) => {
     //project.clear();
@@ -120,33 +119,91 @@ function isoSpill (platfrom, color) {
   let s = w / h;
 
   let gapX = Math.abs((d.x - b.x) / 15);
-  //let gapY = Math.abs((a.y - c.y) / 15);
+  let gapY = Math.abs((a.y - c.y) / 15);
   //let ap = new Point(a.x, a.y - gapY);
   //let bp = new Point(b.x - gapX, b.y);
   //let cp = new Point(c.x, c.y + gapY);
   //let dp = new Point(d.x + gapX, d.y);
+  // spill
   var decagon = new Path.RegularPolygon(center, 10, 50);
-  //decagon.fillColor = '#e9e9ff';
-  //decagon.selected = true;
   decagon.scale(s, 1, a);
   decagon.scale(.60, center);
   let randomPts = decagon.segments.map(pt => {
     let line = new Path([center, pt]);
-    //line.selected = true;
-    let random = Math.floor(Math.random() * (100 - 50 + 1)) + 50;
+    let random = Math.floor(Math.random() * (100 - 75 + 1)) + 75;
     let newPt = line.getPointAt((line.length / 100) * random);
     return newPt;
   });
   let spill = new Path(randomPts);
-  //spill.selected = true;
   spill.closed = true;
   spill.smooth({ type: 'catmull-rom', factor: 0.5 });
   let randomColor = colors[Math.floor(Math.random() * Math.floor(3))];
   while(randomColor === color){
     randomColor = colors[Math.floor(Math.random() * Math.floor(3))];
   }
-  spill.fillColor = randomColor;
-  return spill;
+  spill.fillColor = colors[randomColor].dark;
+
+  //console.log('b.x - d.x: ', b.x - d.x);
+  //console.log('spill.bounds.width: ', spill.bounds.width);
+  if(spill.bounds.width > b.x - d.x) {
+    spill.remove();
+  }
+  // can
+  let halfPt = path => path.getPointAt(path.length / 2);
+  let axis1 = new Path([
+    halfPt(new Path([a,d])),
+    halfPt(new Path([b,c]))
+  ]);
+  let axis2 = new Path([
+    halfPt(new Path([a,b])),
+    halfPt(new Path([d,c]))
+  ]);
+  //axis1.selected = true;
+  //axis2.selected = true;
+
+  let botPt = axis1.getPointAt((axis1.length / 100) * 33)
+  let topPt = axis1.getPointAt((axis1.length / 100) * 66)
+  let canBody = new Path([
+    new Point(botPt.x, botPt.y + gapY * 2),
+    new Point(botPt.x, botPt.y - gapY * 2),
+    new Point(topPt.x, topPt.y - gapY * 2),
+    new Point(topPt.x, topPt.y + gapY * 2)
+  ]);
+  canBody.clone = true;
+  //canBody.selected = true;
+  canBody.fillColor = colors[randomColor].full;
+
+  //let cap = new Path.Circle(new Point(canBody.segments[0].point.x, canBody.segments[0].point.y - gapY / 2), gapY * 2);
+  let cap1 = new Path.Circle(new Point(canBody.segments[0].point.x, canBody.segments[0].point.y - gapY * 2), gapY * 1.55 );
+  if(Math.random() > .5) {
+    cap1.fillColor = new Color({
+      gradient: {
+        stops: [colors[randomColor].full, colors[randomColor].dark]
+      },
+      destination: new Point(cap1.bounds.center.x - (cap1.bounds.width / 2), cap1.bounds.center.y - (cap1.bounds.height / 2)),
+      origin: new Point(cap1.bounds.center.x + (cap1.bounds.width / 2), cap1.bounds.center.y + (cap1.bounds.height / 2))
+    });
+    cap1.strokeColor = colors[randomColor].light;
+  } else {
+    cap1.fillColor = colors[randomColor].full;
+  }
+
+  //let cap2 = new Path.Circle(new Point(canBody.segments[3].point.x, canBody.segments[3].point.y - gapY * 2), gapY - 1.75 );
+  let cap2 = new Path.Circle(new Point(canBody.segments[3].point.x, canBody.segments[3].point.y - gapY * 2), gapY * 1.75 );
+  cap2.fillColor = colors[randomColor].full;
+  let can = new Group([canBody, cap1, cap2]);
+
+
+  if(Math.random() > .5) {
+    can.scale(-1, 1, can.bounds.center);
+  }
+
+  can.scale(1, 1.05, can.bounds.center);
+  can.scale(.75, can.bounds.center);
+  //can.scale(.60, center);
+  //cap2.strokeColor = colors[randomColor].light;
+  //cap.selected = true;
+  return new Group([spill, can]);
 }
 
 function isoHole (platfrom, color) {
