@@ -3,13 +3,10 @@ import paper from 'paper'; // to be globally declared
 import cconvert from 'color-convert';
 import "babel-polyfill";
 import seedrandom from 'seedrandom';
-//seedrandom('seed3', { global: true }); // override Math.Random
-seedrandom('seed' + Math.random(), { global: true }); // override Math.Random
+let seed = 'seed_' + Math.round(Math.random() * 10000000);
+console.log(seed);
+seedrandom(seed, { global: true }); // override Math.Random
 
-//import createShapes from './shapes';
-//const shapes = createShapes({
-  //cconvert: cconvert
-//});
 
 // setup paper.js
 paper.install(window);
@@ -37,23 +34,22 @@ for (var key in colors) {
   }
 }
 
-
+// when DOM loads
 window.onload = function() {
   paper.setup(canvas);
-  console.log('colors: ', colors);
   let ogPt = new Point(0, canvas.height / 2);
 
+  // grid setup
   let a = new Point(0, 0);
   let b = new Point(1, -0.577);
   let c = new Point(0, -1.14);
   let d = new Point(-1, -0.577);
-
   let basePath = new Path([a, b, c, d, a]);
   //basePath.strokeWeight = 2;
   //basePath.strokeColor = 'black';
   basePath.scale(100, a);
   basePath.translate(ogPt);
-  console.log('basePath: ', basePath);
+  //console.log('basePath: ', basePath);
   let colRecs = [];
   for (var j = 0, colCount = 100; j < colCount; j++) {
     let colRec = basePath.clone();
@@ -68,30 +64,24 @@ window.onload = function() {
       //rowRec.translate(new Point(0, ogPt.y - (basePath.bounds.height * j)));
       rowRec.translate(new Point((basePath.segments[0].point.x - basePath.segments[1].point.x) * j * -1, (basePath.segments[0].point.y - basePath.segments[1].point.y) * j));
       row.push(rowRec);
-      //let idTxt = new PointText({
-        //point: rowRec.bounds.center,
-        //content: `${i}, ${j}`,
-        //fillColor: 'black',
-        //fontSize: 12
-      //});
     }
-    //let idTxt = new PointText({
-      //point: colRec.bounds.center,
-      //content: i,
-      //fillColor: 'black',
-      //fontSize: 12
-    //});
     return row;
   });
-
   recs = recs.reduce((carry, row) => {
     return carry.concat(row);
   }, []);
-
-
   recs = recs.map(rec => {
     let color = colors[Math.floor(Math.random() * Math.floor(3))];
-    return isoPlatform (rec, color);
+
+    let type = randomSelect([
+      {val: 'none', chance: .60},
+      {val: 'hole', chance: .10},
+      {val: 'spill', chance: .30}
+    ]);
+    let platfrom = isoPlatform (rec, color);
+    if(type === 'hole') return new Group(platfrom, isoHole(platfrom, color));
+    else if(type === 'spill') return new Group(platfrom, isoSpill(platfrom, color));
+    return platfrom;
   });
   //recs.forEach((rec, i) => {
     //let idTxt = new PointText({
@@ -102,22 +92,10 @@ window.onload = function() {
     //});
   //});
 
-  //let offset = 0;
-  //document.addEventListener('keydown', (e) => {
-    //console.log('e.key: ', e.key);
-    //if(e.key !== 'h' && e.key !== 'j') return;
-    //let speed = 5;
-    //recs.forEach(rec => {
-      //rec.translate(new Point(0, (e.key == 'h' ? speed : speed * -1)));
-    //});
-    //paper.view.draw();
-  //});
 
 
   paper.view.onFrame = (e) => {
-    //if(e.count % 60  === 0) {
     //project.clear();
-
     let speed = 5;
     if(e.count % 2 === 0) {
       recs.forEach(rec => {
@@ -130,6 +108,67 @@ window.onload = function() {
   paper.view.draw();
 }
 
+function isoSpill (platfrom, color) {
+  let center = platfrom.children[0].bounds.center;
+  let rec = platfrom.children[0];
+  let a = rec.segments[0].point;
+  let b = rec.segments[1].point;
+  let c = rec.segments[2].point;
+  let d = rec.segments[3].point;
+  let w = b.x - d.x;
+  let h = a.y - c.y;
+  let s = w / h;
+
+  let gapX = Math.abs((d.x - b.x) / 15);
+  //let gapY = Math.abs((a.y - c.y) / 15);
+  //let ap = new Point(a.x, a.y - gapY);
+  //let bp = new Point(b.x - gapX, b.y);
+  //let cp = new Point(c.x, c.y + gapY);
+  //let dp = new Point(d.x + gapX, d.y);
+  var decagon = new Path.RegularPolygon(center, 10, 50);
+  //decagon.fillColor = '#e9e9ff';
+  //decagon.selected = true;
+  decagon.scale(s, 1, a);
+  decagon.scale(.60, center);
+  let randomPts = decagon.segments.map(pt => {
+    let line = new Path([center, pt]);
+    //line.selected = true;
+    let random = Math.floor(Math.random() * (100 - 50 + 1)) + 50;
+    let newPt = line.getPointAt((line.length / 100) * random);
+    return newPt;
+  });
+  let spill = new Path(randomPts);
+  //spill.selected = true;
+  spill.closed = true;
+  spill.smooth({ type: 'catmull-rom', factor: 0.5 });
+  let randomColor = colors[Math.floor(Math.random() * Math.floor(3))];
+  while(randomColor === color){
+    randomColor = colors[Math.floor(Math.random() * Math.floor(3))];
+  }
+  spill.fillColor = randomColor;
+  return spill;
+}
+
+function isoHole (platfrom, color) {
+  let rec = platfrom.children[0];
+  let a = rec.segments[0].point;
+  let b = rec.segments[1].point;
+  let c = rec.segments[2].point;
+  let d = rec.segments[3].point;
+  let gapX = Math.abs((d.x - b.x) / 15);
+  let gapY = Math.abs((a.y - c.y) / 15);
+  let ap = new Point(a.x, a.y - gapY);
+  let bp = new Point(b.x - gapX, b.y);
+  let cp = new Point(c.x, c.y + gapY);
+  let dp = new Point(d.x + gapX, d.y);
+  let holeRight = new Path([ap, bp, cp, ap]);
+  holeRight.fillColor = colors[color].dark;
+  let holeLeft = new Path([ap, dp, cp, ap]);
+  holeLeft.fillColor = colors[color].full;
+  let holeOutLine = new Path([ap, bp, cp, dp, ap]);
+  //holeOutLine.strokeColor = 'black';
+  return new Group([holeOutLine, holeRight, holeLeft]);
+}
 
 function isoPlatform (rec, color) {
   let a = rec.segments[0].point;
@@ -164,6 +203,7 @@ function isoPlatform (rec, color) {
   return new Group([platfromTop, platfromRight, platfromLeft]);
 }
 
+
 /*
  * random return an option from objects provided
  * prama{Array[Obj]}
@@ -191,9 +231,3 @@ function randomSelect (options) {
   return selected.val;
 }
 
-let val = randomSelect([
-  {val: '49%', chance: .49},
-  {val: '25%', chance: .25},
-  {val: '26%', chance: .26}
-]);
-console.log('val: ', val);
