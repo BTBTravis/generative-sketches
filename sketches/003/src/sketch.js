@@ -3,8 +3,8 @@ import paper from 'paper'; // to be globally declared
 import cconvert from 'color-convert';
 import "babel-polyfill";
 import seedrandom from 'seedrandom';
-//let seed = 'seed_' + Math.round(Math.random() * 10000000);
-let seed = 'seed_2525747';
+let seed = 'seed_' + Math.round(Math.random() * 10000000);
+//let seed = 'seed_2525747';
 console.log(seed);
 seedrandom(seed, { global: true }); // override Math.Random
 
