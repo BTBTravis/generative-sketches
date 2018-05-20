@@ -101,7 +101,7 @@ window.onload = function() {
   paper.setup(canvas);
   //let ogPt = new Point(0, canvas.height / 2);
   //let ogPt = new Point(canvas.width / 2, canvas.height / 2);
-  let ogPt = new Point(canvas.width / 2, canvas.height / 3);
+  let ogPt = new Point(canvas.width / 2, canvas.height / 8);
   //https://yuanchuan.name/2018/05/06/unicode-patterns.html
   //https://www.obliquity.com/computer/html/unicode2500.html
 
@@ -116,7 +116,7 @@ window.onload = function() {
   paper.view.onFrame = (e) => {
     //let speed = 5;
     if(e.count % 8 === 0) {
-      project.clear();
+      //project.clear();
       var options = {
         'horzlineRight': 0.16,
         'horzlineLeft': 0.16,

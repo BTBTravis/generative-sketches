@@ -1,0 +1,24 @@
+{
+  "name": "003",
+  "version": "0.0.1",
+  "main": "dist/bundle.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "watchify src/sketch.js -t babelify -o dist/sketch_bundle.js",
+    "build": "browserify src/sketch.js -t babelify -o dist/sketch_bundle.js"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babelify": "^8.0.0",
+    "browserify": "^16.2.0",
+    "watchify": "^3.11.0"
+  },
+  "dependencies": {
+    "color-convert": "^1.9.1",
+    "paper": "^0.11.5",
+    "seedrandom": "^2.4.3",
+    "weighted": "^0.3.0"
+  }
+}
