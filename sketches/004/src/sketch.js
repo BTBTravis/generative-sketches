@@ -39,10 +39,25 @@ let chars = {
     start: [0, 3],
     end: [-11, 20]
   },
+  backslash: {
+    code: '\u{2572}',
+    start: [11, 3],
+    end: [10, 20]
+  },
   vertline: {
     code: '\u{2502}',
     start: [5, 5],
     end: [0, 20]
+  },
+  horzlineRight: {
+    code: '\u{2500}',
+    start: [0, -5],
+    end: [-13, 0]
+  },
+  horzlineLeft: {
+    code: '\u{2500}',
+    start: [13, -5],
+    end: [13, 0]
   }
 };
 
@@ -52,29 +67,16 @@ window.onload = function() {
   let ogPt = new Point(0, canvas.height / 2);
   //https://yuanchuan.name/2018/05/06/unicode-patterns.html
   let pt1 = new Point(200,200);
-  //let testText = new PointText({
-    //point: pt1,
-    //content: chars.vertline.code,
-    //fillColor: 'black',
-    //fontSize: 18
-  //});
 
-  //var og = new Path.RegularPolygon(pt1, 4, 3);
-  //og.strokeColor = 'black';
-  //let offset = new Point(4, 4);
-  //let pt2 = pt1 + offset;
-  //var bot = new Path.RegularPolygon(new Point(pt1.x + 5, pt1.y - 15), 4, 3);
-  //bot.strokeColor = 'black';
-
-  let lineKeys = [ 'vertline', 'vertline', 'fwdslash', 'vertline', 'fwdslash' ];
-  //let lineKeys = [ 'vertline' ];
+  let lineKeys = [ 'vertline', 'horzlineLeft', 'vertline', 'horzlineRight', 'fwdslash', 'horzlineRight', 'vertline', 'horzlineLeft', 'fwdslash', 'backslash', 'horzlineLeft', 'vertline', 'horzlineRight', 'backslash', 'backslash', 'horzlineLeft', 'vertline',  'horzlineLeft', 'horzlineLeft', ];
+  //let lineKeys = [ 'horzlineLeft' ];
   //let lineKeys = [ 'fwdslash' ];
   let line = [];
 
   for (var i = 0, len = lineKeys.length; i < len; i++) {
     console.log('i: ', i);
     if (i > 0) var ancorPt = line[i - 1].endPt;
-    else var ancorPt = new Point(200,200);
+    else var ancorPt = new Point(200,400);
     let info = chars[lineKeys[i]];
     let ancorDebug = new Path.RegularPolygon(ancorPt, 4, 3);
     ancorDebug.strokeColor = 'green';
