@@ -2,6 +2,7 @@ import paper from 'paper'; // to be globally declared
 import cconvert from 'color-convert';
 import "babel-polyfill";
 import seedrandom from 'seedrandom';
+import weighted from 'weighted';
 //let seed = 'seed_' + Math.round(Math.random() * 10000000);
 let seed = 'seed_2525747';
 console.log(seed);
@@ -61,33 +62,21 @@ let chars = {
   }
 };
 
-// when DOM loads
-window.onload = function() {
-  paper.setup(canvas);
-  let ogPt = new Point(0, canvas.height / 2);
-  //https://yuanchuan.name/2018/05/06/unicode-patterns.html
-  let pt1 = new Point(200,200);
-
-  let lineKeys = [ 'vertline', 'horzlineLeft', 'vertline', 'horzlineRight', 'fwdslash', 'horzlineRight', 'vertline', 'horzlineLeft', 'fwdslash', 'backslash', 'horzlineLeft', 'vertline', 'horzlineRight', 'backslash', 'backslash', 'horzlineLeft', 'vertline',  'horzlineLeft', 'horzlineLeft', ];
-  //let lineKeys = [ 'horzlineLeft' ];
-  //let lineKeys = [ 'fwdslash' ];
+function draw (keys, pt) {
   let line = [];
-
-  for (var i = 0, len = lineKeys.length; i < len; i++) {
-    console.log('i: ', i);
+  //let pt1 = new Point(200,200);
+  for (var i = 0, len = keys.length; i < len; i++) {
     if (i > 0) var ancorPt = line[i - 1].endPt;
-    else var ancorPt = new Point(200,400);
-    let info = chars[lineKeys[i]];
-    let ancorDebug = new Path.RegularPolygon(ancorPt, 4, 3);
-    ancorDebug.strokeColor = 'green';
+    else var ancorPt = pt;
+    let info = chars[keys[i]];
+    //let ancorDebug = new Path.RegularPolygon(ancorPt, 4, 3);
+    //ancorDebug.strokeColor = 'green';
     let startPt = new Point(ancorPt.x - info.start[0], ancorPt.y - info.start[1]);
-    let startDebug = new Path.RegularPolygon(startPt, 4, 3);
-    startDebug.strokeColor = 'red';
+    //let startDebug = new Path.RegularPolygon(startPt, 4, 3);
+    //startDebug.strokeColor = 'red';
     let endPt = new Point(ancorPt.x - info.end[0], ancorPt.y - info.end[1]);
-    let endDebug = new Path.RegularPolygon(endPt, 4, 3);
-    endDebug.strokeColor = 'blue';
-    //pt = new Path.RegularPolygon(new Point(startPt.x - info.end[0], startPt.y - info.end[1]), 4, 3);
-    //pt.strokeColor = 'blue';
+    //let endDebug = new Path.RegularPolygon(endPt, 4, 3);
+    //endDebug.strokeColor = 'blue';
 
     let symb = new PointText({
       point: startPt,
@@ -96,23 +85,56 @@ window.onload = function() {
       fontSize: 18
     });
     line.push({
-      endPt: endPt
-      //symb: symb
+      endPt: endPt,
+      symb: symb
     });
   };
+  let lastPt = line[line.length - 1].endPt;
+  let offset = new Point(pt.x - lastPt.x, pt.y - lastPt.y);
+  line.forEach(seg => {
+    seg.symb.translate(offset);
+  });
+  return line;
+}
+// when DOM loads
+window.onload = function() {
+  paper.setup(canvas);
+  //let ogPt = new Point(0, canvas.height / 2);
+  //let ogPt = new Point(canvas.width / 2, canvas.height / 2);
+  let ogPt = new Point(canvas.width / 2, canvas.height / 3);
+  //https://yuanchuan.name/2018/05/06/unicode-patterns.html
+  //https://www.obliquity.com/computer/html/unicode2500.html
 
-  console.log('lineKeys: ', lineKeys);
-  console.log('line: ', line);
+  let lineKeys = [];
+  //let lineKeys = [ 'vertline', 'horzlineLeft', 'vertline', 'horzlineRight', 'fwdslash', 'horzlineRight', 'vertline', 'horzlineLeft', 'fwdslash', 'backslash', 'horzlineLeft', 'vertline', 'horzlineRight', 'backslash', 'backslash', 'horzlineLeft', 'vertline',  'horzlineLeft', 'horzlineLeft', 'vertline', 'vertline', 'vertline','vertline', 'vertline','vertline',];
+  //let line = draw(lineKeys, ogPt);
+  //line = draw(lineKeys, (ogPt - line[line.length - 1].endPt));
 
-  //paper.view.onFrame = (e) => {
-    ////project.clear();
+
+
+
+  paper.view.onFrame = (e) => {
     //let speed = 5;
-    //if(e.count % 2 === 0) {
-      //recs.forEach(rec => {
-        //rec.translate(new Point(0, speed));
-      //});
-    //}
-  //};
+    if(e.count % 8 === 0) {
+      project.clear();
+      var options = {
+        'horzlineRight': 0.16,
+        'horzlineLeft': 0.16,
+        'fwdslash': 0.22,
+        'vertline': 0.22,
+        'backslash': 0.22
+      };
+      if (lineKeys[lineKeys.length - 1] === 'horzlineRight') {
+        options.horzlineRight = 0.5;
+        options.horzlineLeft = 0;
+      } else if (lineKeys[lineKeys.length - 1] === 'horzlineLeft') {
+        options.horzlineRight = 0;
+        options.horzlineLeft = 0.5;
+      }
+      lineKeys.push(weighted.select(options));
+      let line = draw(lineKeys, ogPt);
+    }
+  };
 
   // Draw the view now:
   paper.view.draw();

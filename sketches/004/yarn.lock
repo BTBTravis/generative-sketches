@@ -2063,6 +2063,10 @@ watchify@^3.11.0:
     through2 "^2.0.0"
     xtend "^4.0.0"
 
+weighted@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/weighted/-/weighted-0.3.0.tgz#81087f1ffe1b3f06db43dbe451451e9068166647"
+
 wide-align@^1.1.0:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/wide-align/-/wide-align-1.1.2.tgz#571e0f1b0604636ebc0dfc21b0339bbe31341710"
