@@ -1,6 +1,6 @@
 {
-  "name": "003",
-  "version": "0.0.1",
+  "name": "005",
+  "version": "0.2.0",
   "main": "dist/bundle.js",
   "license": "MIT",
   "scripts": {
