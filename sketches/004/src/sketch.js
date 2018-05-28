@@ -1,122 +1,119 @@
-import paper from 'paper'; // to be globally declared
-import cconvert from 'color-convert';
 import "babel-polyfill";
 import seedrandom from 'seedrandom';
 import weighted from 'weighted';
-let seed = 'seed_' + Math.round(Math.random() * 10000000);
-//let seed = 'seed_2525747';
-console.log(seed);
-seedrandom(seed, { global: true }); // override Math.Random
+import genColors from './colors';
+import genUtil from './utils';
 
-// setup paper.js
-paper.install(window);
-const canvas = document.querySelector('canvas');
-
-// colors
-// http://paletton.com/#uid=31b1f0kMoI2nuMguhM2MFsyN-mb
-let colors = {
-  0: '#FFBF00',
-  1: '#28E600',
-  2: '#E50070',
-  3: '#FFFFFF',
-  bg0: '#E3AA00',
-  bg1: '#21BE00',
-  bg2: '#BC005C',
-  bg3: '#FFFFFF'
-};
-
-for (var key in colors) {
-  let colorHsl = cconvert.hex.hsl(colors[key]);
-  colors[colors[key]] = {
-    full: colors[key],
-    light: '#' + cconvert.hsl.hex(colorHsl[0], colorHsl[1], colorHsl[2] != 100 ? colorHsl[2] + 5 : 100),
-    dark: '#' + cconvert.hsl.hex(colorHsl[0], colorHsl[1], colorHsl[2] != 0 ? colorHsl[2] - 5 : 0)
-  }
-}
-
-let chars = {
+var seed, canvas, ctx, colors, util;
+var chars = {
   fwdslash: {
     code: '\u{2571}',
-    start: [0, 3],
-    end: [-11, 20]
+    start: 'topRight',
+    end: 'botLeft'
   },
   backslash: {
     code: '\u{2572}',
-    start: [11, 3],
-    end: [10, 20]
+    start: 'topLeft',
+    end: 'botRight'
   },
   vertline: {
     code: '\u{2502}',
-    start: [5, 5],
-    end: [0, 20]
+    start: 'topRight',
+    end: 'botMiddle'
   },
   horzlineRight: {
     code: '\u{2500}',
-    start: [0, -5],
-    end: [-13, 0]
+    start: 'topLeft',
+    end: 'topRight'
   },
   horzlineLeft: {
     code: '\u{2500}',
-    start: [13, -5],
-    end: [13, 0]
+    start: 'topRight',
+    end: 'topLeft'
   }
 };
 
-function draw (keys, pt) {
-  let line = [];
-  //let pt1 = new Point(200,200);
-  for (var i = 0, len = keys.length; i < len; i++) {
-    if (i > 0) var ancorPt = line[i - 1].endPt;
-    else var ancorPt = pt;
-    let info = chars[keys[i]];
-    //let ancorDebug = new Path.RegularPolygon(ancorPt, 4, 3);
-    //ancorDebug.strokeColor = 'green';
-    let startPt = new Point(ancorPt.x - info.start[0], ancorPt.y - info.start[1]);
-    //let startDebug = new Path.RegularPolygon(startPt, 4, 3);
-    //startDebug.strokeColor = 'red';
-    let endPt = new Point(ancorPt.x - info.end[0], ancorPt.y - info.end[1]);
-    //let endDebug = new Path.RegularPolygon(endPt, 4, 3);
-    //endDebug.strokeColor = 'blue';
 
-    let symb = new PointText({
-      point: startPt,
-      content: info.code,
-      fillColor: 'black',
-      fontSize: 18
-    });
-    line.push({
-      endPt: endPt,
-      symb: symb
-    });
-  };
-  let lastPt = line[line.length - 1].endPt;
-  let offset = new Point(pt.x - lastPt.x, pt.y - lastPt.y);
-  line.forEach(seg => {
-    seg.symb.translate(offset);
+function init() {
+  // seed
+  seed = 'seed_' + Math.round(Math.random() * 10000000); // random every load
+  //seed = 'seed_2525747'; // set seed
+  seedrandom(seed, { global: true }); // override Math.Random
+  // canvas selection
+  canvas = document.querySelector('canvas');
+  // resolution fix
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+  // canvas setup
+  ctx = canvas.getContext('2d');
+  ctx.font = '18px serif';
+  // util
+  util = new genUtil({
+    canvas: canvas,
+    ctx: ctx
   });
-  return line;
+
+  // colors
+  colors = new genColors({ // http://paletton.com/#uid=31b1f0kMoI2nuMguhM2MFsyN-mb
+    0: '#FFBF00',
+    1: '#28E600',
+    2: '#E50070',
+    3: '#FFFFFF',
+    bg0: '#E3AA00',
+    bg1: '#21BE00',
+    bg2: '#BC005C',
+    bg3: '#FFFFFF'
+  });
+  // determin pts
+  for (let key in chars) {
+    console.log('key: ', key);
+    ctx.fillText(chars[key].code, 100, 100);
+    chars[key].ancors = util.findAncors(); // find ancors
+    // offset ancors
+    for (let ancorKey in chars[key].ancors) {
+      util.mark(chars[key].ancors.topLeft, 'red');
+      let pt = chars[key].ancors[ancorKey];
+      chars[key].ancors[ancorKey][0] = pt[0] - 100;
+      chars[key].ancors[ancorKey][1] = pt[1] - 100;
+    }
+    console.log('chars[key]: ', chars[key]);
+    //break;
+    util.clear();
+  }
 }
-// when DOM loads
-window.onload = function() {
-  paper.setup(canvas);
-  //let ogPt = new Point(0, canvas.height / 2);
-  //let ogPt = new Point(canvas.width / 2, canvas.height / 2);
-  let ogPt = new Point(canvas.width / 2, canvas.height / 3);
-  //https://yuanchuan.name/2018/05/06/unicode-patterns.html
-  //https://www.obliquity.com/computer/html/unicode2500.html
-
-  let lineKeys = [];
-  //let lineKeys = [ 'vertline', 'horzlineLeft', 'vertline', 'horzlineRight', 'fwdslash', 'horzlineRight', 'vertline', 'horzlineLeft', 'fwdslash', 'backslash', 'horzlineLeft', 'vertline', 'horzlineRight', 'backslash', 'backslash', 'horzlineLeft', 'vertline',  'horzlineLeft', 'horzlineLeft', 'vertline', 'vertline', 'vertline','vertline', 'vertline','vertline',];
-  //let line = draw(lineKeys, ogPt);
-  //line = draw(lineKeys, (ogPt - line[line.length - 1].endPt));
 
 
+let lineKeys = ['vertline','vertline','vertline', 'fwdslash'];
+function draw() {
+  //draw line
+  //var line = [];
+  let endpt = [canvas.width / 2, 0];
+  util.mark(endpt, 'green');
+  for (var i = 0, len = lineKeys.length; i < len; i++) {
+    //if (i > 0) var ancorPt = line[i - 1].endPt;
+    //else var ancorPt = [canvas.width / 2, canvas.height / 2];
+    let currentChar = chars[lineKeys[i]];
+    let startAncor = currentChar.ancors[currentChar.start];
+    let startPt = [endpt[0] - startAncor[0], endpt[1] - startAncor[1]];
+    ctx.fillText(currentChar.code, startPt[0], startPt[1]);
+    let endAncor = currentChar.ancors[currentChar.end];
+    endpt = [startPt[0] + endAncor[0], startPt[1] + endAncor[1]];
+    //util.mark(endpt, 'red');
+  };
+}
 
-
-  paper.view.onFrame = (e) => {
-    //let speed = 5;
-    if(e.count % 8 === 0) {
-      project.clear();
+var fps = 8;
+var now;
+var then = Date.now();
+var interval = 1000/fps;
+var delta;
+var lastOption = '';
+function update() {
+    requestAnimationFrame(update);
+    now = Date.now();
+    delta = now - then;
+    if (delta > interval) {
+      then = now - (delta % interval);
       var options = {
         'horzlineRight': 0.16,
         'horzlineLeft': 0.16,
@@ -124,47 +121,30 @@ window.onload = function() {
         'vertline': 0.22,
         'backslash': 0.22
       };
-      if (lineKeys[lineKeys.length - 1] === 'horzlineRight') {
+      if (lastOption === 'horzlineRight') {
         options.horzlineRight = 0.5;
         options.horzlineLeft = 0;
-      } else if (lineKeys[lineKeys.length - 1] === 'horzlineLeft') {
+      } else if (lastOption === 'horzlineLeft') {
         options.horzlineRight = 0;
         options.horzlineLeft = 0.5;
       }
-      lineKeys.push(weighted.select(options));
-      let line = draw(lineKeys, ogPt);
+      let selectedOption = weighted.select(options);
+      lastOption = selectedOption;
+      lineKeys.unshift(selectedOption);
+      //lineKeys.push(weighted.select(options));
+      //let line = draw(lineKeys, ogPt);
+      util.clear();
+      draw();
+      //window.requestAnimationFrame(update);
     }
-  };
+}
 
-  // Draw the view now:
-  paper.view.draw();
+// when DOM loads
+window.onload = () => {
+  init();
+  draw();
+  update();
 }
 
 
-/*
- * random return an option from objects provided
- * prama{Array[Obj]}
- *
- */
-function randomSelect (options) {
-  let totalChance = options.reduce((total, option) => {
-    total += option.chance;
-    return total;
-  }, 0);
-  if(totalChance !== 1) throw 'randomSelect chances dont add up to 1';
-  let r  = Math.random();
-  let ranges = options.reduce((carry, option) => {
-    carry.ranges.push({
-      min: carry.total,
-      max: option.chance + carry.total
-    });
-    carry.total += option.chance;
-    return carry;
-  }, {total: 0, ranges: []});
-  let selected = ranges.ranges.reduce((sel, range, i) => {
-    if(sel === false && range.min < r && range.max > r) return options[i];
-    return sel;
-  }, false);
-  return selected.val;
-}
 
