@@ -45,7 +45,10 @@ function init() {
   canvas.height = canvas.clientHeight;
   // canvas setup
   ctx = canvas.getContext('2d');
-  ctx.font = '18px serif';
+  ctx.font = '18px Roboto';
+  //ctx.fillStyle = 'red';
+  //ctx.fillText('Hello World', 100, 100);
+  //return;
   // util
   util = new genUtil({
     canvas: canvas,
@@ -76,7 +79,7 @@ function init() {
     //break;
     util.clear();
     let font = ctx.font;
-    ctx.font = '200px serif';
+    ctx.font = '200px Roboto';
     ctx.fillText(chars[key].code, canvas.width / 2, canvas.height / 2);
     chars[key].largeAncors = util.findAncors(); // find ancors
     // offset ancors
@@ -85,7 +88,7 @@ function init() {
       chars[key].largeAncors[ancorKey][0] = pt[0] - (canvas.width / 2) ;
       chars[key].largeAncors[ancorKey][1] = pt[1] - (canvas.height / 2);
     }
-    ctx.font = '18px serif';
+    ctx.font = '18px Roboto';
     util.clear();
   }
 
@@ -115,7 +118,7 @@ function init() {
       let currentChar = chars[this.phases[this.step]];
       let offset = util.ooffset(centerPt, currentChar.largeAncors.center);
       let font = ctx.font;
-      ctx.font = '200px serif';
+      ctx.font = '200px Roboto';
       ctx.fillText(currentChar.code, offset[0], offset[1]);
       ctx.font = font;
       this.drawCount++;
