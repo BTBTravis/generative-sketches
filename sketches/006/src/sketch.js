@@ -4,7 +4,7 @@ import weighted from 'weighted';
 import genColors from './colors';
 import genUtil from './utils';
 
-var seed, canvas, ctx, colors, util, grid;
+var seed, canvas, ctx, colors, util, grid, cw;
 var chars = {
   fwdslash: {
     code: '\u{2571}',
@@ -65,7 +65,6 @@ function init() {
   });
   // determin pts
   for (let key in chars) {
-    console.log('key: ', key);
     ctx.fillText(chars[key].code, 100, 100);
     chars[key].ancors = util.findAncors(); // find ancors
     // offset ancors
@@ -74,19 +73,21 @@ function init() {
       chars[key].ancors[ancorKey][0] = pt[0] - 100;
       chars[key].ancors[ancorKey][1] = pt[1] - 100;
     }
-    console.log('chars[key]: ', chars[key]);
     //break;
     util.clear();
+    let font = ctx.font;
+    ctx.font = '200px serif';
+    ctx.fillText(chars[key].code, canvas.width / 2, canvas.height / 2);
+    chars[key].largeAncors = util.findAncors(); // find ancors
+    // offset ancors
+    for (let ancorKey in chars[key].largeAncors) {
+      let pt = chars[key].largeAncors[ancorKey];
+      chars[key].largeAncors[ancorKey][0] = pt[0] - (canvas.width / 2) ;
+      chars[key].largeAncors[ancorKey][1] = pt[1] - (canvas.height / 2);
+    }
+    ctx.font = '18px serif';
+    util.clear();
   }
-
-  //util.mark([100,100], 'red');
-  //util.mark(util.offset([100,100], chars['fwdslash'].ancors.topRight), 'red');
-  //util.mark(chars['fwdslash'].ancors.topRight, 'red');
-  //util.mark(chars['fwdslash'].ancors.botRight, 'blue');
-  //util.mark(chars['fwdslash'].ancors.botLeft, 'green');
-  //util.mark(chars['fwdslash'].ancors.topLeft, 'yellow');
-  //util.mark(chars['fwdslash'].ancors.botMiddle, 'orange');
-  //util.mark(chars['fwdslash'].ancors.center, 'cyan');
 
   // grid setup
   let gridUnitWidth = canvas.width / 20;
@@ -99,6 +100,37 @@ function init() {
       grid.push([x,y]);
     }
   }
+
+  function CenterWheel () {
+    this.step = 0;
+    this.phases = ['vertline','fwdslash','horzlineRight', 'backslash', 'vertline', 'fwdslash', 'horzlineRight', 'backslash'];
+    this.phases.reverse();
+    this.drawCount = 0;
+    this.draw = () => {
+      let centerPt = [canvas.width / 2, canvas.height / 2];
+      ctx.fillStyle = 'black';
+      let scaleFactor = 9;
+      util.centerRec(centerPt, 25 * scaleFactor, 35 * scaleFactor);
+      ctx.fillStyle = 'red';
+      let currentChar = chars[this.phases[this.step]];
+      let offset = util.ooffset(centerPt, currentChar.largeAncors.center);
+      let font = ctx.font;
+      ctx.font = '200px serif';
+      ctx.fillText(currentChar.code, offset[0], offset[1]);
+      ctx.font = font;
+      this.drawCount++;
+    }
+    this.incriment = function () {
+      if(this.drawCount % 4 != 0) return null;
+      if(this.step < this.phases.length - 1) this.step++;
+      else this.step = 0;
+    }
+  }
+  cw = new CenterWheel();
+
+
+  // center wheel setup
+
 }
 
 let wheel = ['vertline','fwdslash','horzlineRight', 'backslash', 'vertline', 'fwdslash', 'horzlineRight', 'backslash'];
@@ -116,18 +148,11 @@ function draw() {
     ctx.fillText(currentChar.code, offset[0], offset[1]);
   });
 
-  //draw line
-  //let endpt = [canvas.width / 2, 0];
-  //util.mark(endpt, 'green');
-  //for (var i = 0, len = lineKeys.length; i < len; i++) {
-    //let currentChar = chars[lineKeys[i]];
-    //let startAncor = currentChar.ancors[currentChar.start];
-    //let startPt = [endpt[0] - startAncor[0], endpt[1] - startAncor[1]];
-    //ctx.fillText(currentChar.code, startPt[0], startPt[1]);
-    //let endAncor = currentChar.ancors[currentChar.end];
-    //endpt = [startPt[0] + endAncor[0], startPt[1] + endAncor[1]];
-    ////util.mark(endpt, 'red');
-  //};
+  // draw center wheel
+  cw.draw();
+  cw.incriment();
+  //ctx.fillText(currentChar.code, offset[0], offset[1]);
+
 }
 
 var fps = 5;
