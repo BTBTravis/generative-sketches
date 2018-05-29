@@ -35,28 +35,35 @@ export default function Utils (config) {
       }
     }
     let topRight = coloredPixles.reduce((maxPixel, currentPixel) => { // smallest y and largest x
-      if(currentPixel[0] >= maxPixel[0] && currentPixel[1] <= maxPixel[1]) return currentPixel;
+      if(currentPixel[0] >= maxPixel[0]) maxPixel[0] = currentPixel[0];
+      if(currentPixel[1] <= maxPixel[1]) maxPixel[1] = currentPixel[1];
       return maxPixel;
-    });
+    }, [coloredPixles[0][0], coloredPixles[0][1]]);
     let botRight = coloredPixles.reduce((maxPixel, currentPixel) => { // largest y and largest x
-      if(currentPixel[0] >= maxPixel[0] && currentPixel[1] >= maxPixel[1]) return currentPixel;
+      if(currentPixel[0] >= maxPixel[0]) maxPixel[0] = currentPixel[0];
+      if(currentPixel[1] >= maxPixel[1]) maxPixel[1] = currentPixel[1];
       return maxPixel;
-    });
+    }, [coloredPixles[0][0], coloredPixles[0][1]]);
     let topLeft = coloredPixles.reduce((maxPixel, currentPixel) => { // largest y and smallest x
-      if(currentPixel[0] <= maxPixel[0] && currentPixel[1] <= maxPixel[1]) return currentPixel;
+      if(currentPixel[0] <= maxPixel[0]) maxPixel[0] = currentPixel[0];
+      if(currentPixel[1] <= maxPixel[1]) maxPixel[1] = currentPixel[1];
       return maxPixel;
-    });
+    }, [coloredPixles[0][0], coloredPixles[0][1]]);
     let botLeft = coloredPixles.reduce((maxPixel, currentPixel) => { // largest y and largest x
-      if(currentPixel[0] <= maxPixel[0] && currentPixel[1] >= maxPixel[1]) return currentPixel;
+      if(currentPixel[0] <= maxPixel[0]) maxPixel[0] = currentPixel[0];
+      if(currentPixel[1] >= maxPixel[1]) maxPixel[1] = currentPixel[1];
       return maxPixel;
-    });
+    }, [coloredPixles[0][0], coloredPixles[0][1]]);
     let botMiddle = [botRight[0] - ((botRight[0] - botLeft[0]) / 2), botRight[1]]
+    let center = [botMiddle[0], ((botMiddle[1] + topLeft[1]) / 2)];
+    //let botMiddle = [botRight[0] - ((botRight[0] - botLeft[0]) / 2), botRight[1]]
     return {
       topRight: topRight,
       botRight: botRight,
       topLeft: topLeft,
       botLeft: botLeft,
-      botMiddle: botMiddle
+      botMiddle: botMiddle,
+      center: center
     };
   }
 
@@ -66,6 +73,15 @@ export default function Utils (config) {
     ctx.fillStyle = color;
     ctx.fillRect(pt[0] - 2, pt[1] - 2, 4, 4);
     ctx.fillStyle = prevFillColor;
+  };
+  this.offset = (pt1, pt2) => {
+    return [pt1[0] + pt2[0], pt1[1] + pt2[1]];
+  };
+  this.ooffset = (pt1, pt2) => {
+    return [pt1[0] - pt2[0], pt1[1] - pt2[1]];
+  };
+  this.centerRec = (pt, width, height) => {
+    ctx.fillRect(pt[0] - (width / 2), pt[1] - (height / 2), width, height);
   };
 };
 

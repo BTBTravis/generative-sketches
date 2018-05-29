@@ -70,7 +70,6 @@ function init() {
     chars[key].ancors = util.findAncors(); // find ancors
     // offset ancors
     for (let ancorKey in chars[key].ancors) {
-      util.mark(chars[key].ancors.topLeft, 'red');
       let pt = chars[key].ancors[ancorKey];
       chars[key].ancors[ancorKey][0] = pt[0] - 100;
       chars[key].ancors[ancorKey][1] = pt[1] - 100;
@@ -79,6 +78,15 @@ function init() {
     //break;
     util.clear();
   }
+
+  //util.mark([100,100], 'red');
+  //util.mark(util.offset([100,100], chars['fwdslash'].ancors.topRight), 'red');
+  //util.mark(chars['fwdslash'].ancors.topRight, 'red');
+  //util.mark(chars['fwdslash'].ancors.botRight, 'blue');
+  //util.mark(chars['fwdslash'].ancors.botLeft, 'green');
+  //util.mark(chars['fwdslash'].ancors.topLeft, 'yellow');
+  //util.mark(chars['fwdslash'].ancors.botMiddle, 'orange');
+  //util.mark(chars['fwdslash'].ancors.center, 'cyan');
 
   // grid setup
   let gridUnitWidth = canvas.width / 20;
@@ -93,11 +101,20 @@ function init() {
   }
 }
 
-let lineKeys = ['vertline','vertline','vertline', 'fwdslash'];
+let wheel = ['vertline','fwdslash','horzlineRight', 'backslash', 'vertline', 'fwdslash', 'horzlineRight', 'backslash'];
+let step = 0;
 function draw() {
   // draw grid
   grid.map(pt => util.mark([pt[0], pt[1]], 'red'));
-  //ctx.fillRect(25, 25, 20, 30);
+
+  let currentChar = chars[wheel[step]];
+  grid.map(pt => {
+    ctx.fillStyle = '#ececec';
+    util.centerRec(pt, 25, 35);
+    ctx.fillStyle = 'black';
+    let offset = util.ooffset(pt, currentChar.ancors.center);
+    ctx.fillText(currentChar.code, offset[0], offset[1]);
+  });
 
   //draw line
   //let endpt = [canvas.width / 2, 0];
@@ -113,7 +130,7 @@ function draw() {
   //};
 }
 
-var fps = 8;
+var fps = 5;
 var now;
 var then = Date.now();
 var interval = 1000/fps;
@@ -125,28 +142,27 @@ function update() {
   delta = now - then;
   if (delta > interval) {
     then = now - (delta % interval);
-    var options = {
-      'horzlineRight': 0.16,
-      'horzlineLeft': 0.16,
-      'fwdslash': 0.22,
-      'vertline': 0.22,
-      'backslash': 0.22
-    };
-    if (lastOption === 'horzlineRight') {
-      options.horzlineRight = 0.5;
-      options.horzlineLeft = 0;
-    } else if (lastOption === 'horzlineLeft') {
-      options.horzlineRight = 0;
-      options.horzlineLeft = 0.5;
-    }
-    let selectedOption = weighted.select(options);
-    lastOption = selectedOption;
-    lineKeys.unshift(selectedOption);
-    //lineKeys.push(weighted.select(options));
-    //let line = draw(lineKeys, ogPt);
+    if(step >= wheel.length) step = 0;
+    //var options = {
+      //'horzlineRight': 0.16,
+      //'horzlineLeft': 0.16,
+      //'fwdslash': 0.22,
+      //'vertline': 0.22,
+      //'backslash': 0.22
+    //};
+    //if (lastOption === 'horzlineRight') {
+      //options.horzlineRight = 0.5;
+      //options.horzlineLeft = 0;
+    //} else if (lastOption === 'horzlineLeft') {
+      //options.horzlineRight = 0;
+      //options.horzlineLeft = 0.5;
+    //}
+    //let selectedOption = weighted.select(options);
+    //lastOption = selectedOption;
+    //lineKeys.unshift(selectedOption);
     util.clear();
     draw();
-    //window.requestAnimationFrame(update);
+    step++;
   }
 }
 
@@ -154,5 +170,5 @@ function update() {
 window.onload = () => {
   init();
   draw();
-  //update();
+  update();
 }
