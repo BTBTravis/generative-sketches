@@ -3,9 +3,8 @@ import paper from 'paper'; // to be globally declared
 import seedrandom from 'seedrandom';
 import weighted from 'weighted';
 import genColors from './colors';
-import genUtil from './utils';
 
-var seed, canvas, ctx, colors, util, grid, cw;
+var seed, canvas, colors, grid, shapes;
 
 function init() {
   // seed
@@ -22,11 +21,6 @@ function init() {
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
   // canvas setup
-  // util
-  //util = new genUtil({
-    //canvas: canvas,
-    //ctx: ctx
-  //});
 
   // colors
   colors = new genColors({ // http://paletton.com/#uid=75a0J0kU5OUplRWyiToTKuvSQnE
@@ -92,7 +86,7 @@ function draw() {
   // draw cones
 
   // ellipse
-  let shapes = grid.map(obj => {
+  shapes = grid.map(obj => {
     let pt = obj.pt;
     let x = obj.size * 25;
     // color
@@ -127,26 +121,29 @@ function draw() {
       fillColor: colors[bodyColorIndex].full,
       closed: true
     });
-    return {orgin: pt, size: obj.size, shape: new Group([body, cap])};
+    let guideLine = new Path({
+      segments: [pt,b],
+      //strokeColor: 'black',
+    });
+    return {orgin: pt, size: obj.size, shape: new Group([body, cap, guideLine])};
   });
 
   // transform shapes
   shapes = shapes.map((grp, i) => {
     // rotate shape
-    grp.shape.rotate(Math.floor(Math.random() * 360), grp.origin);
+    grp.rot = Math.floor(Math.random() * 360);
+    grp.shape.rotate(grp.rot, grp.origin);
     // scale shape
-    let scaler = 1;
-    if(i % 2 == 0) {
-      scaler = Math.random() * 1.25 + .5;
-      console.log('scaler: ', scaler);
-      grp.shape.scale(scaler, grp.origin);
+    grp.scale = 1;
+    if (i % 2 == 0) {
+      grp.scale = Math.random() * 1.25 + .5;
+      grp.shape.scale(grp.scale, grp.origin);
     }
-    grp.scaler = scaler;
     return grp;
   });
   // force smaller shapes to background
   shapes.sort(function (a, b) {
-      return (a.scaler + a.size) - (b.scaler + b.size);
+      return (a.scale + a.size) - (b.scale + b.size);
   });
 
   shapes = shapes.map(obj => {
@@ -164,7 +161,7 @@ function draw() {
   paper.view.draw(); // paper.js draw
 }
 
-var fps = 5;
+var fps = 30;
 var now;
 var then = Date.now();
 var interval = 1000/fps;
@@ -176,27 +173,22 @@ function update() {
   delta = now - then;
   if (delta > interval) {
     then = now - (delta % interval);
-    if(step >= wheel.length) step = 0;
-    //var options = {
-      //'horzlineRight': 0.16,
-      //'horzlineLeft': 0.16,
-      //'fwdslash': 0.22,
-      //'vertline': 0.22,
-      //'backslash': 0.22
-    //};
-    //if (lastOption === 'horzlineRight') {
-      //options.horzlineRight = 0.5;
-      //options.horzlineLeft = 0;
-    //} else if (lastOption === 'horzlineLeft') {
-      //options.horzlineRight = 0;
-      //options.horzlineLeft = 0.5;
-    //}
-    //let selectedOption = weighted.select(options);
-    //lastOption = selectedOption;
-    //lineKeys.unshift(selectedOption);
+
+
+    shapes.map(obj => {
+      let guide = obj.shape.children[2];
+      let pt1 = guide.getPointAt(0);
+      let pt2 = guide.getPointAt(guide.length);
+      let dir = pt1.subtract(pt2);
+      dir = dir.normalize();
+      let finalDir = new Point(dir.x * 5/obj.size, dir.y * 5/obj.size);
+      //console.log('obj.size: ', obj.size);
+      //console.log('dir: ', dir);
+      obj.shape.translate(finalDir);
+    });
     //util.clear();
-    draw();
-    step++;
+    //draw();
+    //step++;
   }
 }
 
@@ -204,5 +196,5 @@ function update() {
 window.onload = () => {
   init();
   draw();
-  //update();
+  update();
 }
