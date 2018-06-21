@@ -7,6 +7,14 @@ import genUtil from './utils';
 
 var seed, canvas, ctx, colors, util, grid, cw;
 
+
+var fillKey = weighted.select({
+  'white': 0.15,
+  'black': 0.15,
+  'green': 0.33,
+  'pink': 0.33
+});
+
 function init() {
   // seed
   seed = 'seed_' + Math.round(Math.random() * 10000000); // random every load
@@ -35,11 +43,7 @@ function init() {
     2: '#00E086',
     3: '#A6F900',
     4: '#FFFFFF',
-    5: '#000000',
-    bg0: '#E3AA00',
-    bg1: '#21BE00',
-    bg2: '#BC005C',
-    bg3: '#FFFFFF'
+    5: '#000000'
   });
   console.log('colors: ', colors);
   // select random starting pts
@@ -77,17 +81,32 @@ function init() {
 
 function draw() {
   // draw bg
-  var bg = new Path.Rectangle({
-    topLeft: new Point(0,0),
-    bottomRight: new Point(canvas.width, canvas.height),
-    fillColor: {
+
+  var fills = {
+    'white': '#FFFFFF',
+    'black': '#000000',
+    'green': {
       gradient: {
         stops: [['#00A562', 0.05], ['#00804C', 0.75]],
         radial: true
       },
       origin: new Point(canvas.width / 2, canvas.height / 2),
       destination: new Point(0,0)
+    },
+    'pink': {
+      gradient: {
+        stops: [['#C3006E', 0.05], ['#970055', 0.75]],
+        radial: true
+      },
+      origin: new Point(canvas.width / 2, canvas.height / 2),
+      destination: new Point(0,0)
     }
+  };
+
+  var bg = new Path.Rectangle({
+    topLeft: new Point(0,0),
+    bottomRight: new Point(canvas.width, canvas.height),
+    fillColor: fills[fillKey]
   });
   // draw cones
 
@@ -97,11 +116,14 @@ function draw() {
     let x = obj.size * 25;
     // color
     let bodyColorIndex = Math.floor(Math.random() * 4);
-    let capColorType = weighted.select({
+    let colorOptions = {
       'white': 0.25,
       'black': 0.25,
       'og': 0.5,
-    });
+    };
+    if (fillKey == 'black') colorOptions.black = 0;
+    if (fillKey == 'white') colorOptions.white = 0;
+    let capColorType = weighted.select(colorOptions);
     let capColor = '#FFFFFF';
     if(capColorType == 'black') capColor = '#000000';
     else if(capColorType == 'og') capColor = colors[bodyColorIndex].full;
