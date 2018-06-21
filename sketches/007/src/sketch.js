@@ -4,7 +4,7 @@ import seedrandom from 'seedrandom';
 import weighted from 'weighted';
 import genColors from './colors';
 
-var seed, canvas, colors, grid, shapes;
+var seed, canvas, colors, grid, shapes, bg;
 
 function init() {
   // seed
@@ -38,7 +38,7 @@ function init() {
   console.log('colors: ', colors);
   // select random starting pts
   grid = [];
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < 20; i++) {
     grid.push(new Point(
       Math.floor(Math.random() * canvas.width),
       Math.floor(Math.random() * canvas.height),
@@ -71,7 +71,7 @@ function init() {
 
 function draw() {
   // draw bg
-  var bg = new Path.Rectangle({
+  bg = new Path.Rectangle({
     topLeft: new Point(0,0),
     bottomRight: new Point(canvas.width, canvas.height),
     fillColor: {
@@ -174,17 +174,26 @@ function update() {
   if (delta > interval) {
     then = now - (delta % interval);
 
-
     shapes.map(obj => {
       let guide = obj.shape.children[2];
       let pt1 = guide.getPointAt(0);
       let pt2 = guide.getPointAt(guide.length);
       let dir = pt1.subtract(pt2);
       dir = dir.normalize();
+      // animate along primaty axis
       let finalDir = new Point(dir.x * 5/obj.size, dir.y * 5/obj.size);
-      //console.log('obj.size: ', obj.size);
-      //console.log('dir: ', dir);
       obj.shape.translate(finalDir);
+
+      //reset pos if needed
+      let bbPts = [obj.shape.bounds.topLeft, obj.shape.bounds.topRight, obj.shape.bounds.bottomLeft, obj.shape.bounds.bottomRight];
+      let onPage = bbPts.reduce((onPage, pt) => {
+         return onPage || bg.bounds.contains(pt);
+      }, false);
+      if (!onPage) {
+
+        obj.shape.translate(new Point((obj.shape.bounds.centerX - canvas.width / 2) * 2 * -1, (obj.shape.bounds.centerY - canvas.height / 2) * 2 * -1));
+      }
+
     });
     //util.clear();
     //draw();
