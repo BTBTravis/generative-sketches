@@ -1,0 +1,33 @@
+{
+    "name": "generative-sketches",
+    "version": "2.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git"
+    },
+    "author": "Travis Shears",
+    "license": "MIT",
+    "devDependencies": {
+        "babel-core": "^6.26.3",
+        "babel-preset-env": "^1.6.1",
+        "babelify": "^8.0.0",
+        "browserify": "^16.2.0",
+        "watchify": "^3.11.0",
+        "gulp": "^3.9.1",
+        "gulp-buffer": "0.0.2",
+        "gulp-tap": "^1.0.1",
+        "gulplog": "^1.0.0",
+        "gulp-sourcemaps": "^2.6.4"
+    },
+    "dependencies": {
+        "babel-polyfill": "^6.26.0",
+        "color-convert": "^1.9.2",
+        "paper": "^0.11.5",
+        "seedrandom": "^2.4.3",
+        "weighted": "^0.3.0"
+    }
+}
